@@ -1,0 +1,33 @@
+from ultralytics import YOLO
+import cv2
+import torch
+from google.colab.patches import cv2_imshow
+from google.colab import files
+import os
+
+uploaded = files.upload()  
+image_path = list(uploaded.keys())[0]
+print(f"Файл загружен: {image_path}")
+if os.path.exists(image_path):
+    print("Изображение найдено!")
+else:
+    print("Ошибка! Файл не найден.")
+model = YOLO("yolov8n.pt")
+
+results = model(image_path)
+
+for result in results:
+    result.show()  
+
+img = cv2.imread(image_path)
+
+for result in results:
+    for box in result.boxes:
+        x1, y1, x2, y2 = map(int, box.xyxy[0])  
+        conf = box.conf[0].item()  
+        label = result.names[int(box.cls[0])]  
+        cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
+        cv2.putText(img, f"{label} {conf:.2f}", (x1, y1 - 10),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+
+cv2_imshow(img)
